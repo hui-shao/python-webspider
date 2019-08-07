@@ -1,9 +1,10 @@
 # python-webspider
 A simple Python-based webspider
 <p align="center">
-<img src="https://img.shields.io/github/license/hui-shao/python-webspider?color=orange&style=for-the-badge">
-<img src="https://img.shields.io/badge/version-1.0-green.svg?longCache=true&style=for-the-badge">
-<img src="https://img.shields.io/badge/python-3.x-blueviolet.svg?longCache=true&style=for-the-badge">
+<img src="https://img.shields.io/github/license/hui-shao/python-webspider?color=orange&style=flat-square">
+<img src="https://img.shields.io/badge/version-1.0-green.svg?longCache=true&style=flat-square">
+<img src="https://img.shields.io/badge/python-3.x-blueviolet.svg?longCache=true&style=flat-square">
+<img src="https://img.shields.io/badge/Platform-Windows%20%20%7C%20Linux-blue.svg?longCache=true&style=flat-square">
 </p>
 
 ### 此爬虫的特点：
