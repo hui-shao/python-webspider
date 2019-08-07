@@ -37,6 +37,7 @@ def Download():
             for j in range(1,100):
                 f = open("./"+path+"/"+str(i)+".png","wb")
                 f.write(img)
+                f.close
         #try中的语句如果出现异常，则执行except里面的代码
         except:
             #输出出错的链接到errors.txt,并提示
