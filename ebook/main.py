@@ -121,27 +121,29 @@ if __name__ == "__main__":
         r_1 = get_book_info(shelf_id)
         name_s = r_1[0]
         book_id_s = r_1[1]
+        flag_1 = 0  # book_id_s 列表中的序号
         for name in name_s:
             print("当前书本："+name)
-            for book_id in book_id_s:
-                print("该书本id："+book_id)
-                # 获取对应的一本书的每一页的下载地址（列表）
-                print("开始获取下载地址……")
-                r_2 = get_img_lists(_book_id=book_id, _shelf_id=shelf_id)
-                print("OK.")
-                img_list = r_2[0]
-                pageNo_list = r_2[1]
-                print("================开始下载================")
-                # 建立目录
-                if not os.path.exists("./"+name):
-                    os.mkdir("./"+name)
-                print("目录已建立")
-                flag_1 = 0
-                for img_url in img_list:
-                    pageNo = pageNo_list[flag_1]
-                    download_directly(_download_url=img_url, _dirname=name, _file_num=pageNo)
-                    time.sleep(1)
-                    flag_1 = flag_1 + 1
-                print("=================下载完成=================\n")
-            input("按任意键继续下一本书>>>")
-            clean()
+            book_id = book_id_s[flag_1]
+            print("该书本id："+book_id)
+            # 获取对应的一本书的每一页的下载地址（列表）
+            print("开始获取下载地址……")
+            r_2 = get_img_lists(_book_id=book_id, _shelf_id=shelf_id)
+            print("OK.")
+            img_list = r_2[0]
+            pageNo_list = r_2[1]
+            print("================开始下载================")
+            # 建立目录
+            if not os.path.exists("./"+name):
+                os.mkdir("./"+name)
+            print("目录已建立")
+            flag_2 = 0  # pageNo_list 列表中的序号
+            for img_url in img_list:
+                pageNo = pageNo_list[flag_2]
+                download_directly(_download_url=img_url, _dirname=name, _file_num=pageNo)
+                time.sleep(1)
+                flag_2 = flag_2 + 1
+            print("=================下载完成=================\n")
+            flag_1 = flag_1 + 1
+        input("按任意键继续下一本书>>>")
+        clean()
