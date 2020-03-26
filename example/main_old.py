@@ -28,11 +28,13 @@ def Download():
         # 否则在requests.get里面会出现404错误
         line = line.strip()
         print("\n\n"+line)
+        # 延迟一下 让爬虫友好一点
+        time.sleep(1)
         # 使用try对下载部分进行异常处理
         try:
             # 用requests.get下载图片
             # 设置timeout防止卡住，第一个是连接时间，第二个是读取时间
-            response = requests.get(line, headers=hea, timeout=(12, 60))
+            response = requests.get(line, headers=hea, timeout=(72, 240))
             # 取response中二进制数据
             img = response.content
             print(response)
@@ -72,12 +74,11 @@ def Getsource():
     #
     # 延迟2秒后清屏
     time.sleep(2)
-    # os.system('clear') #for Unix
-    os.system('cls')  # for Windows
+    os.system('clear')  # for Unix
+    # os.system('cls') #for Windows
     #
-
-    # PART 1 此为 正则表达式 部分。(写在''里面)。找到规律，利用正则，内容就可以出来 ps.注意表达式里的空格。
-    text = re.findall('meta itemprop="image" content="(.*?)"', html.text)
+    # 此为 正则表达式 部分。(写在''里面)。找到规律，利用正则，内容就可以出来 ps.注意表达式里的空格。
+    text = re.findall('src="(.*?)"', html.text)
     #
     # 输出正则提取结果至文件
     data1 = open("./url.txt", "a", encoding='utf-8')
@@ -85,16 +86,7 @@ def Getsource():
         print(each)
         # 逐行写入保存到文本文件
         data1.write(each+"\n")
-
-    # PART 2 此为 正则表达式 部分。(写在''里面)。找到规律，利用正则，内容就可以出来 ps.注意表达式里的空格。
-    text = re.findall('img data-src="(.*?)" width="', html.text)
-    #
-    # 输出正则提取结果至文件
-    data1 = open("./url.txt", "a", encoding='utf-8')
-    for each in text:
-        print("http:"+each)
-        # 逐行写入保存到文本文件
-        data1.write("http:"+each+"\n")
+    data1.close
 
 
 def Delfiles():
@@ -127,8 +119,7 @@ def Delfiles():
 #
 # 设置hea，即useragent，让目标网站误以为本程序是浏览器，并非爬虫。
 # 从网站的Requests Header中获取。审查元素
-hea = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36'}
+hea = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.118 Safari/537.36'}
 
 
 # 获取网页源码
