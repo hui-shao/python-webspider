@@ -18,7 +18,7 @@ if __name__ == "__main__":
         "Accept-Language": "zh-CN,zh;q=0.9"
     }
     f = open("./lists.txt", "w+", encoding="utf-8")
-    for i in range(1, 2000):
+    for i in range(1, 20002):
         par = {
             "nickName": "御坂" + str(i) + "号"
         }
@@ -51,9 +51,11 @@ if __name__ == "__main__":
         if i % 500 == 0:
             f.flush()
         if i % 100 == 0:
-            time.sleep(random.randint(10, 30))
+            sleep_time_1 = random.randint(10, 30)
+            print("\n达到整百，随机暂停 %d s\n" % sleep_time_1)
+            time.sleep(sleep_time_1)
         else:
-            time.sleep(random.random())
+            time.sleep(random.uniform(0.1, 0.5))  # 取0.1-0.5之间的随机float
     f.close()
     end = time.time()
     print("\n\nFinished.  Total time:", end - start)
