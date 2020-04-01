@@ -5,14 +5,14 @@ import random
 
 
 def send_wxmsg(_sckey, _title="misaka", _context="正文"):
-    url = "https://sc.ftqq.com/%s.send" % (_sckey)
+    url_postmsg = "https://sc.ftqq.com/%s.send" % _sckey
     _context = _context + "\n\n" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     data = {
-        "text": "%s" % (_title),
-        "desp": "%s" % (_context)
+        "text": "%s" % _title,
+        "desp": "%s" % _context
     }
     try:
-        res = requests.post(url=url, data=data)
+        res = requests.post(url=url_postmsg, data=data)
         msg_back = json.loads(res.text)
         if msg_back["errmsg"] == "success":
             print("消息推送成功！")
