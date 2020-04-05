@@ -83,6 +83,7 @@ class Spider:
                 errurl_file = open(self.dirpath + "errors.txt", "a")
                 errurl_file.write(_url + "\n")
                 errurl_file.close()
+                err_list_total.append("初级页面|%s" % _url)
             return 1
         else:
             self.mkdir_and_setpath()  # 建立下载文件夹并初始化下载路径
@@ -146,16 +147,25 @@ class Spider:
         if err_status != 0:
             if SaveErrUrl:
                 errurl_file = open(self.dirpath_sub + "errors.txt", "a", encoding='utf-8')
-                errurl_file.write(_url + "\n")
+                errurl_file.write("%d.jpg|%s" % (_count, _url) + "\n")
                 errurl_file.close()
+                err_list_total.append("%s|%d.jpg|%s" % (self.title, _count, _url))
             return 1
         return 0
 
 
+def write_err_total():
+    errtotal_file = open(DirPath + "Errors_total.txt", "w+", encoding="utf-8")
+    for each in err_list_total:
+        errtotal_file.write(each + "\n")
+    errtotal_file.close()
+
+
 if __name__ == '__main__':
     spider = Spider()
-    for i in range(25, 50):  # Change it before use
-        url = "http://www.kuman5.com/1831/4108%d.html" % i
+    err_list_total = []
+    for i in range(735, 740):  # Change it before use
+        url = "http://www.kuman5.com/1831/410%d.html" % i
         getinfo_result = spider.get_info(url)
         if getinfo_result == 1:  # 检查返回值，如果获取图像下载地址列表环节出错,跳过此次循环
             continue
@@ -164,7 +174,7 @@ if __name__ == '__main__':
         if SaveImgUrl:
             spider.save_imgurl(imgurl_list)
         # 以下 遍历“图片下载地址”列表，开始下载
-        print("\n" + getinfo_result[1])
+        print("\n" + getinfo_result[1])  # 显示当前下载内容的“标题”
         count = 1
         for imgurl in imgurl_list:
             spider.download(imgurl, count)
@@ -175,5 +185,6 @@ if __name__ == '__main__':
             count += 1
         print("Finished. Continue after 2s.")
         time.sleep(2)
-
+    if SaveErrUrl:
+        write_err_total()
     input("\nAll finished.\nPress ENTER to Exit.")
