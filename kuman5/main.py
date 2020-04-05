@@ -151,7 +151,7 @@ class Spider:
                 errurl_file.write("%d.jpg|%s" % (_count, _url) + "\n")
                 errurl_file.close()
                 err_list_total.append("%s|%d.jpg|%s" % (self.title, _count, _url))
-            return 1
+            return 1  # 返回值暂时还没有用...
         return 0
 
 
@@ -165,12 +165,10 @@ def write_err_total():
         pass
 
 
-if __name__ == '__main__':
+def run():
+    global url, count
     time_start = time.time()
-    spider = Spider()
-    tool = ConsoleTool()
-    err_list_total = []
-    for i in range(817, 818):  # Change it before use
+    for i in range(810, 818):  # Change it before use
         url = "http://www.kuman5.com/1831/410%d.html" % i
         getinfo_result = spider.get_info(url)
         if getinfo_result == 1:  # 检查返回值，如果获取图像下载地址列表环节出错,跳过此次循环
@@ -197,3 +195,19 @@ if __name__ == '__main__':
     time_end = time.time()
     print("\n\n==========\nAll finished.\nTotal time: %.4f s\n\n" % (time_end - time_start))
     input("Press ENTER to Exit..")
+
+
+if __name__ == '__main__':
+    err_list_total = []
+    try:
+        spider = Spider()
+        tool = ConsoleTool()
+        run()  # 启动..
+    except KeyboardInterrupt:
+        print("\n\nRaised KeyboardInterruption.\nExit!")
+        os._exit(0)
+    except Exception as err_info:
+        print("\n\nERROR!\n", err_info)
+        os._exit(1)
+    finally:
+        os._exit(0)
