@@ -4,6 +4,7 @@ import re
 import os
 import time
 import decrypt
+from tools import ConsoleTool
 
 # Some vars
 SaveErrUrl = True
@@ -155,16 +156,21 @@ class Spider:
 
 
 def write_err_total():
-    errtotal_file = open(DirPath + "Errors_total.txt", "w+", encoding="utf-8")
-    for each in err_list_total:
-        errtotal_file.write(each + "\n")
-    errtotal_file.close()
+    if len(err_list_total) > 0:
+        errtotal_file = open(DirPath + "Errors_total.txt", "w+", encoding="utf-8")
+        for each in err_list_total:
+            errtotal_file.write(each + "\n")
+        errtotal_file.close()
+    else:
+        pass
 
 
 if __name__ == '__main__':
+    time_start = time.time()
     spider = Spider()
+    tool = ConsoleTool()
     err_list_total = []
-    for i in range(735, 740):  # Change it before use
+    for i in range(817, 818):  # Change it before use
         url = "http://www.kuman5.com/1831/410%d.html" % i
         getinfo_result = spider.get_info(url)
         if getinfo_result == 1:  # 检查返回值，如果获取图像下载地址列表环节出错,跳过此次循环
@@ -183,8 +189,11 @@ if __name__ == '__main__':
                 # time.sleep(3)  # debug only
                 time.sleep(10)
             count += 1
-        print("Finished. Continue after 2s.")
-        time.sleep(2)
+        print("\n\n%s Finished.\nContinue after 5s..." % getinfo_result[1])
+        time.sleep(5)
+        tool.console_clear()  # 清屏
     if SaveErrUrl:
-        write_err_total()
-    input("\nAll finished.\nPress ENTER to Exit.")
+        write_err_total()  # 将所有错误的页面链接和图片链接写入到 DirPath 下的errors文件
+    time_end = time.time()
+    print("\n\n==========\nAll finished.\nTotal time: %.4f s\n\n" % (time_end - time_start))
+    input("Press ENTER to Exit..")

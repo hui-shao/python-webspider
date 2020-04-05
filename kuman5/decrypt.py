@@ -44,6 +44,9 @@ def run(_input_keys):
     for url in num_uel_arr:
         url = url.split("|")[-1]
         if not "http:" in url:
-            url = "http:" + url
+            if "https:" in url:
+                pass
+            else:
+                url = "http:" + url
         url_list.append(url)
     return url_list
