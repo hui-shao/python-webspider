@@ -3,6 +3,7 @@ import requests
 import time
 import re
 import os
+import sys
 from console_tools import ConsoleTools
 from msg_tools import MsgTools
 
@@ -37,21 +38,24 @@ class Spider:
         time_start = time.time()
         print("START...")
         # 以下 获取每一话的一些基本信息
-        print("获取基本信息中...")
         for i in range(START_N, END_N + 1):  # 每一话的网页地址
             self.url_a = self.url + "%d/" % i  # 拼接后的url
-            getinfo_result = spider.get_info(self.url_a)
+            print("获取基本信息中...")
+            print(self.url_a)
+            getinfo_result = spider.get_info(self.url_a, i)
             if getinfo_result == 1:  # 检查返回值，如果获取必要信息环节出错,跳过此次循环
                 print("获取信息失败，跳过此次循环")
                 continue
             # 以下 获取一话内所有图片的下载地址，并生成列表
             print("获取所有图片下载地址中...")
             for page_n in range(1, self.img_total + 1):
+                sys.stdout.write("\r第 %d 张，共 %d 张" % (page_n, self.img_total))
+                sys.stdout.flush()
                 imgurl = self.get_imgurl(self.url_a, self.cid, self.mid, self.img_total, page_n)
                 imgurl_list.append(imgurl)
             # 以下 逐行保存图片下载地址列表为 txt
             if SaveImgUrl:
-                print("将下载地址保存至 url.txt 中...")
+                print("\n将下载地址保存至 url.txt 中...")
                 self.save_imgurl(imgurl_list)
             # 以下 遍历“图片下载地址”列表，开始下载
             print("下载开始...")
@@ -80,9 +84,10 @@ class Spider:
             self.err_total_count, total_time))  # server酱消息推送
         input("Press ENTER to Exit..")
 
-    def get_info(self, _url):
+    def get_info(self, _url, _count):
         """
         用于获取标题和一些关于漫画的信息，比如页数
+        :param _count: 序号
         :param _url: 目标网页url
         :return: 若无异常，返回一个列表, 若出现异常，返回 1
         """
@@ -113,6 +118,7 @@ class Spider:
                 err_status = 0
                 self.title = re.findall(r'MANGABZ_CTITLE = "(.*?)";', res.text)[0]
                 self.title = re.sub("^.*? ", "", self.title)  # 移除重复的漫画名
+                self.title = "%d_" % _count + self.title  # 在目录名前加序号便于排序与区分
                 self.mid = re.findall(r'MANGABZ_MID=(\d*?);', res.text)[0]
                 self.cid = re.findall(r'MANGABZ_CID=(\d*?);', res.text)[0]
                 self.img_total = int(re.findall(r'MANGABZ_IMAGE_COUNT=(\d*?);', res.text)[0])
