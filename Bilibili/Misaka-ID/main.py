@@ -2,6 +2,69 @@ import requests
 import json
 import time
 import random
+import sys
+import getopt
+
+# 一些默认的参数
+sckey = ""  # 用于 servre酱 消息推送，若不需要，无需修改保持现状
+prefix = "御坂"
+suffix = "号"
+zfill_n = 0
+chk_range = "1,20001"  # 闭区间
+# 以下一般无需修改
+url = "https://passport.bilibili.com/web/generic/check/nickname"
+hea = {
+    "Accept": "application/json, text/plain, */*",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/80.0.3987.132 Safari/537.36",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Accept-Language": "zh-CN,zh;q=0.9"
+}
+help_info = '''
+    -r [--range]    编号检测范围(闭区间,英文逗号分隔) 
+                        例如: --range=1,200    表示从 1 检测到 200
+    -p [--prefix]   名称前缀
+    -s [--suffix]   名称后缀
+    -z [--zfill]    将编号补齐的位数
+                        例如: --zfill=5        会将 1 补齐为 00001
+    -k [--key]      用于 "server酱" 推送的sckey (push token)
+'''
+
+
+def options():
+    """用于处理传入参数"""
+    print("")
+    global chk_range, prefix, suffix, zfill_n, sckey
+    opts, args = getopt.getopt(sys.argv[1:], '-h-r:-p:-s:-z:-k:',
+                               ['help', 'range=', 'prefix=', 'suffix=', 'zfill=', 'key='])
+    if len(opts) < 1:  # 若未接收到已经预设的命令行参数，则直接采用默认参数
+        print("[*] 未检测到传入参数，采用默认格式，如 御坂2233号\n")
+        return 0
+    for opt_name, opt_value in opts:
+        if opt_name in ('-h', '--help'):
+            print("[+] Help info :\n" + help_info)
+            exit()
+        if opt_name in ('-r', '--range'):
+            print("[+] 范围: ", opt_value)
+            chk_range = str(opt_value)
+            continue
+        if opt_name in ('-p', '--prefix'):
+            print("[+] 前缀: ", opt_value)
+            prefix = str(opt_value)
+            continue
+        if opt_name in ('-f', '--suffix'):
+            print("[+] 后缀: ", opt_value)
+            suffix = str(opt_value)
+            continue
+        if opt_name in ('-z', '--zfill'):
+            print("[+] 补齐位数: ", opt_value)
+            zfill_n = int(opt_value)
+            continue
+        if opt_name in ('-k', '--key'):
+            sckey = str(opt_value)
+            print("[+] Sckey: ", sckey[:10] + "*" * (len(sckey) - 8 - 10) + sckey[(len(sckey) - 8):])
+            continue
+    print("")
 
 
 def send_wxmsg(_sckey, _title="misaka", _context="正文"):
@@ -57,7 +120,9 @@ def check():
     if i % 20 == 0:
         # 每检测20个写一次文件
         f.seek(0)
-        f.write("Available: " + str(lst_available) + "\nUnavailable: " + str(lst_unavailable) + "\nTimeout: " + str(timeout) + "\nError: " + str(errs) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (len(lst_available), len(lst_unavailable)))
+        f.write("Available: " + str(lst_available) + "\nUnavailable: " + str(lst_unavailable) + "\nTimeout: " + str(
+            timeout) + "\nError: " + str(errs) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (
+                    len(lst_available), len(lst_unavailable)))
         f.flush()
 
 
@@ -72,43 +137,51 @@ def sleep():
         time.sleep(0.02)
 
 
-def loop():
+def loop(_start_n, _end_n):
     global i, par
-    for i in range(1, 20002):
-        par = {"nickName": "御坂" + str(i) + "号"}  # request.get 参数
+    for i in range(_start_n, _end_n):
+        par = {"nickName": "%s" % (prefix + str(i) + suffix)}  # request.get 参数
+        check()
+        sleep()
+
+
+def loop_zfill(_start_n, _end_n):
+    global i, par
+    for i in range(_start_n, _end_n):
+        par = {"nickName": "%s" % (prefix + str(i).zfill(zfill_n) + suffix)}  # request.get 参数
         check()
         sleep()
 
 
 if __name__ == "__main__":
     # Some vars
-    sckey = ""  # 用于 servre酱 消息推送，若不需要，无需修改保持现状
     start_time = time.time()
+    options()
+    i = 1  # 初始化检测编号
     lst_available = []
     lst_unavailable = []
     timeout = []
     errs = []
-    url = "https://passport.bilibili.com/web/generic/check/nickname"
-    hea = {
-        "Accept": "application/json, text/plain, */*",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                      "Chrome/80.0.3987.132 Safari/537.36",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-CN,zh;q=0.9"
-    }
-    par = {"nickName": "御坂1号"}
-    i = 1
+    par = {}
+    chk_range = chk_range.split(",")
+    i_start = int(chk_range[0])
+    i_end = int(chk_range[1]) + 1
     # run
     f = open("./lists.txt", "w+", encoding="utf-8")
     try:
-        loop()  # 进入 for 循环
+        if zfill_n == 0:  # 判断是否补齐0位，并进入for循环
+            loop(i_start, i_end)
+        else:
+            loop_zfill(i_start, i_end)
     except KeyboardInterrupt:
         print("\nRaised Control-C.  Cancled!\n")
     except Exception as err_info_1:
         print("\nError!\n", err_info_1)
     else:
         total_time = time.time() - start_time
-        print("\n\nFinished\nTotal time: %f\n" % total_time)
+        print("\n\nFinished\nTotal time: %f s\n" % total_time)
         if not sckey == "":
-            send_wxmsg(_sckey=sckey, _title="Misaka-ID", _context="Finished.\n\nTotal time: %f" % total_time)
+            print("Server酱推送中...")
+            send_wxmsg(_sckey=sckey, _title="Misaka-ID", _context="Finished.\n\nTotal time: %f s" % total_time)
+    f.write("\n\nType: " + prefix + r" %d " + suffix)
     f.close()
