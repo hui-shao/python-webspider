@@ -11,6 +11,7 @@ prefix = "御坂"
 suffix = "号"
 zfill_n = 0
 chk_range = "1,20001"  # 闭区间
+filename_out = "lists.txt"
 # 以下一般无需修改
 url = "https://passport.bilibili.com/web/generic/check/nickname"
 hea = {
@@ -21,22 +22,23 @@ hea = {
     "Accept-Language": "zh-CN,zh;q=0.9"
 }
 help_info = '''
-    -r [--range]    编号检测范围(闭区间,英文逗号分隔) 
-                        例如: --range=1,200    表示从 1 检测到 200
-    -p [--prefix]   名称前缀
-    -s [--suffix]   名称后缀
-    -z [--zfill]    将编号补齐的位数
-                        例如: --zfill=5        会将 1 补齐为 00001
-    -k [--key]      用于 "server酱" 推送的sckey (push token)
+    -r [--range]       编号检测范围(闭区间,英文逗号分隔) 
+                           例如: --range=1,200    表示从 1 检测到 200
+    -p [--prefix]      名称前缀
+    -s [--suffix]      名称后缀
+    -z [--zfill]       将编号补齐的位数
+                           例如: --zfill=5        会将 1 补齐为 00001
+    -k [--key]         用于 "server酱" 推送的sckey (push token)
+    -f [--filename]    用于设置保存结果的文件名 默认为 lists.txt
 '''
 
 
 def options():
     """用于处理传入参数"""
     print("")
-    global chk_range, prefix, suffix, zfill_n, sckey
-    opts, args = getopt.getopt(sys.argv[1:], '-h-r:-p:-s:-z:-k:',
-                               ['help', 'range=', 'prefix=', 'suffix=', 'zfill=', 'key='])
+    global chk_range, prefix, suffix, zfill_n, sckey, filename_out
+    opts, args = getopt.getopt(sys.argv[1:], '-h-r:-p:-s:-z:-k:-f:',
+                               ['help', 'range=', 'prefix=', 'suffix=', 'zfill=', 'key=', 'filename='])
     if len(opts) < 1:  # 若未接收到已经预设的命令行参数，则直接采用默认参数
         print("[*] 未检测到传入参数，采用默认格式，如 御坂2233号\n")
         return 0
@@ -52,7 +54,7 @@ def options():
             print("[+] 前缀: ", opt_value)
             prefix = str(opt_value)
             continue
-        if opt_name in ('-f', '--suffix'):
+        if opt_name in ('-s', '--suffix'):
             print("[+] 后缀: ", opt_value)
             suffix = str(opt_value)
             continue
@@ -62,7 +64,11 @@ def options():
             continue
         if opt_name in ('-k', '--key'):
             sckey = str(opt_value)
-            print("[+] Sckey: ", sckey[:10] + "*" * (len(sckey) - 8 - 10) + sckey[(len(sckey) - 8):])
+            print("[+] Sckey: ", sckey[:12] + "*" * (len(sckey) - 6 - 12) + sckey[(len(sckey) - 6):])
+            continue
+        if opt_name in ('-f', '--filename'):
+            filename_out = str(opt_value)
+            print("[+] 输出文件名: ", filename_out)
             continue
     print("")
 
@@ -117,16 +123,22 @@ def check():
         timeout.append(i)
     elif error_status == 2:
         errs.append(i)
-    if i % 20 == 0:
+    if (i % 20 == 0) or (i + 1 == i_end):
         # 每检测20个写一次文件
-        f.seek(0)
-        f.write("Available: " + str(lst_available) + "\nUnavailable: " + str(lst_unavailable) + "\nTimeout: " + str(
-            timeout) + "\nError: " + str(errs) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (
-                    len(lst_available), len(lst_unavailable)))
-        f.flush()
+        write_result()
+
+
+def write_result():
+    f.seek(0)
+    f.write("Available: " + str(lst_available) + "\nUnavailable: " + str(lst_unavailable) + "\nTimeout: " + str(
+        timeout) + "\nError: " + str(errs) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (
+                len(lst_available), len(lst_unavailable)))
+    f.flush()
 
 
 def sleep():
+    if i == 0:
+        return 0
     if i % 100 == 0:
         sleep_time_1 = random.randint(5, 15)
         print("\n达到整百，随机暂停 %d s\n" % sleep_time_1)
@@ -167,7 +179,7 @@ if __name__ == "__main__":
     i_start = int(chk_range[0])
     i_end = int(chk_range[1]) + 1
     # run
-    f = open("./lists.txt", "w+", encoding="utf-8")
+    f = open("./" + filename_out, "w+", encoding="utf-8")
     try:
         if zfill_n == 0:  # 判断是否补齐0位，并进入for循环
             loop(i_start, i_end)
@@ -183,5 +195,5 @@ if __name__ == "__main__":
         if not sckey == "":
             print("Server酱推送中...")
             send_wxmsg(_sckey=sckey, _title="Misaka-ID", _context="Finished.\n\nTotal time: %f s" % total_time)
-    f.write("\n\nType: " + prefix + r" %d " + suffix)
+    f.write("\n\nType: " + prefix + r" %d " + suffix + "   zifill=%d\n" % zfill_n)
     f.close()
