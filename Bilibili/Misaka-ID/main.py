@@ -115,14 +115,23 @@ def check():
             if result["code"] == 0:
                 print(i, "available")
                 lst_available.append(i)
-            else:
+                break
+            elif result["code"] == 2001 or result["code"] == 40014:
                 print(i, "unavailable")
                 lst_unavailable.append(i)
-            break
+                break
+            else:
+                print(i, "unknown")
+                error_status = 3
+                retry_n += 1
+                time.sleep(3)
+    # 以下--循环(异常重试)结束后 对错误状态进行判断 并写入列表
     if error_status == 1:
         timeout.append(i)
     elif error_status == 2:
         errs.append(i)
+    elif error_status == 3:
+        lst_unknown.append(i)
     if (i % 20 == 0) or (i + 1 == i_end):
         # 每检测20个写一次文件
         write_result()
@@ -131,7 +140,8 @@ def check():
 def write_result():
     f.seek(0)
     f.write("Available: " + str(lst_available) + "\nUnavailable: " + str(lst_unavailable) + "\nTimeout: " + str(
-        timeout) + "\nError: " + str(errs) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (
+        timeout) + "\nError: " + str(errs) + "\nUnknown: " + str(
+        lst_unknown) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (
                 len(lst_available), len(lst_unavailable)))
     f.flush()
 
@@ -172,6 +182,7 @@ if __name__ == "__main__":
     i = 1  # 初始化检测编号
     lst_available = []
     lst_unavailable = []
+    lst_unknown = []
     timeout = []
     errs = []
     par = {}
@@ -195,5 +206,5 @@ if __name__ == "__main__":
         if not sckey == "":
             print("Server酱推送中...")
             send_wxmsg(_sckey=sckey, _title="Misaka-ID", _context="Finished.\n\nTotal time: %f s" % total_time)
-    f.write("\n\nType: " + prefix + r" %d " + suffix + "   zifill=%d\n" % zfill_n)
+    f.write("\n\nType: " + prefix + r"%d" + suffix + "  --zfill=%d\n" % zfill_n)
     f.close()
