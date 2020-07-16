@@ -12,6 +12,8 @@ suffix = "号"
 zfill_n = 0
 chk_range = "1,20001"  # 闭区间
 filename_out = "lists.txt"
+msg_title = "Misaka-ID"  # 自定义推送消息的标题
+msg_context = ""  # 自定义推送消息的正文
 # 以下一般无需修改
 url = "https://passport.bilibili.com/web/generic/check/nickname"
 hea = {
@@ -30,15 +32,19 @@ help_info = '''
                            例如: --zfill=5        会将 1 补齐为 00001
     -k [--key]         用于 "server酱" 推送的sckey (push token)
     -f [--filename]    用于设置保存结果的文件名 默认为 lists.txt
+    
+    --msg_title        自定义推送消息的标题 默认为 "Misaka-ID"
+    --msg_context      自定义推送消息的正文
 '''
 
 
 def options():
     """用于处理传入参数"""
     print("")
-    global chk_range, prefix, suffix, zfill_n, sckey, filename_out
+    global chk_range, prefix, suffix, zfill_n, sckey, filename_out, msg_title, msg_context
     opts, args = getopt.getopt(sys.argv[1:], '-h-r:-p:-s:-z:-k:-f:',
-                               ['help', 'range=', 'prefix=', 'suffix=', 'zfill=', 'key=', 'filename='])
+                               ['help', 'range=', 'prefix=', 'suffix=', 'zfill=', 'key=', 'filename=', 'msg_title=',
+                                'msg_context='])
     if len(opts) < 1:  # 若未接收到已经预设的命令行参数，则直接采用默认参数
         print("[*] 未检测到传入参数，采用默认格式，如 御坂2233号\n")
         return 0
@@ -70,6 +76,14 @@ def options():
             filename_out = str(opt_value)
             print("[+] 输出文件名: ", filename_out)
             continue
+        if opt_name in '--msg_title':
+            msg_title = str(opt_value)
+            print("[+] 消息标题: ", msg_title)
+            continue
+        if opt_name in '--msg_context':
+            msg_context = str(opt_value)
+            print("[+] 消息正文: ", msg_context)
+            continue
     print("")
 
 
@@ -91,7 +105,8 @@ def send_wxmsg(_sckey, _title="misaka", _context="正文"):
         print("消息发送错误")
 
 
-def check():
+def check(_nickname):
+    par = {"nickName": "%s" % _nickname}  # request.get 参数
     retry_n = 0
     error_status = 0
     while retry_n <= 3:
@@ -100,12 +115,12 @@ def check():
         try:
             res = requests.get(url=url, params=par, headers=hea, timeout=10)
         except (requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
-            print(i, "timeout")
+            print(_nickname, "timeout")
             error_status = 1
             retry_n += 1
             time.sleep(2)
         except Exception as err_info:
-            print("%d Error！\n" % i, err_info)
+            print("%s Error！\n" % _nickname, err_info)
             error_status = 2
             retry_n += 1
             time.sleep(5)
@@ -113,25 +128,25 @@ def check():
             error_status = 0
             result = json.loads(res.text)
             if result["code"] == 0:
-                print(i, "available")
-                lst_available.append(i)
+                print(_nickname, "unregistered")
+                lst_unregistered.append(_nickname)
                 break
             elif result["code"] == 2001 or result["code"] == 40014:
-                print(i, "unavailable")
-                lst_unavailable.append(i)
+                print(_nickname, "registered")
+                lst_registered.append(_nickname)
                 break
             else:
-                print(i, "unknown")
+                print(_nickname, "unknown")
                 error_status = 3
                 retry_n += 1
                 time.sleep(3)
     # 以下--循环(异常重试)结束后 对错误状态进行判断 并写入列表
     if error_status == 1:
-        timeout.append(i)
+        timeout.append(_nickname)
     elif error_status == 2:
-        errs.append(i)
+        errs.append(_nickname)
     elif error_status == 3:
-        lst_unknown.append(i)
+        lst_unknown.append(_nickname)
     if (i % 20 == 0) or (i + 1 == i_end):
         # 每检测20个写一次文件
         write_result()
@@ -139,10 +154,10 @@ def check():
 
 def write_result():
     f.seek(0)
-    f.write("Available: " + str(lst_available) + "\nUnavailable: " + str(lst_unavailable) + "\nTimeout: " + str(
+    f.write("Unregistered: " + str(lst_unregistered) + "\nRegistered: " + str(lst_registered) + "\nTimeout: " + str(
         timeout) + "\nError: " + str(errs) + "\nUnknown: " + str(
-        lst_unknown) + "\n\nAvailable_count = %d\nUnavailable_count = %d\n" % (
-                len(lst_available), len(lst_unavailable)))
+        lst_unknown) + "\n\nUnregistered_count = %d\nRegistered_count = %d\n" % (
+                len(lst_unregistered), len(lst_registered)))
     f.flush()
 
 
@@ -160,18 +175,18 @@ def sleep():
 
 
 def loop(_start_n, _end_n):
-    global i, par
+    global i
     for i in range(_start_n, _end_n):
-        par = {"nickName": "%s" % (prefix + str(i) + suffix)}  # request.get 参数
-        check()
+        name_i = prefix + str(i) + suffix
+        check(name_i)
         sleep()
 
 
 def loop_zfill(_start_n, _end_n):
-    global i, par
+    global i
     for i in range(_start_n, _end_n):
-        par = {"nickName": "%s" % (prefix + str(i).zfill(zfill_n) + suffix)}  # request.get 参数
-        check()
+        name_i = prefix + str(i).zfill(zfill_n) + suffix
+        check(name_i)
         sleep()
 
 
@@ -180,12 +195,11 @@ if __name__ == "__main__":
     start_time = time.time()
     options()
     i = 1  # 初始化检测编号
-    lst_available = []
-    lst_unavailable = []
+    lst_unregistered = []
+    lst_registered = []
     lst_unknown = []
     timeout = []
     errs = []
-    par = {}
     chk_range = chk_range.split(",")
     i_start = int(chk_range[0])
     i_end = int(chk_range[1]) + 1
@@ -205,6 +219,7 @@ if __name__ == "__main__":
         print("\n\nFinished\nTotal time: %f s\n" % total_time)
         if not sckey == "":
             print("Server酱推送中...")
-            send_wxmsg(_sckey=sckey, _title="Misaka-ID", _context="Finished.\n\nTotal time: %f s" % total_time)
+            send_wxmsg(_sckey=sckey, _title=msg_title,
+                       _context="%s\n\nFinished.\n\nTotal time: %f s" % (msg_context, total_time))
     f.write("\n\nType: " + prefix + r"%d" + suffix + "  --zfill=%d\n" % zfill_n)
     f.close()
