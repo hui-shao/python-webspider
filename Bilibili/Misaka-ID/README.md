@@ -1,4 +1,10 @@
-# 御坂网络计数器
+# 注意
+
+**该项目已迁移至：[XeTeam/Misaka-ID](https://github.com/XeTeam/Misaka-ID)**
+
+------
+
+## 御坂网络计数器
 
 一个用于查找 Bilibili 上御坂妹数量的小程序。do，御坂如是说到。
 
