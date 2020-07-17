@@ -1,0 +1,11 @@
+Unregistered: ['御坂09号']
+Registered: ['御坂00号', '御坂01号', '御坂02号', '御坂03号', '御坂04号', '御坂05号', '御坂06号', '御坂07号', '御坂08号']
+Timeout: []
+Error: []
+Unknown: []
+
+Unregistered_count = 1
+Registered_count = 9
+
+
+Type: 御坂%d号  --zfill=2
