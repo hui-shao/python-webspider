@@ -87,22 +87,20 @@ def options():
     print("")
 
 
-def send_wxmsg(_sckey, _title="misaka", _context="正文"):
-    url_postmsg = "https://sc.ftqq.com/%s.send" % _sckey
-    _context = _context + "\n\n" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-    data = {
-        "text": "%s" % _title,
-        "desp": "%s" % _context
-    }
-    try:
-        res = requests.post(url=url_postmsg, data=data)
-        msg_back = json.loads(res.text)
-        if msg_back["errmsg"] == "success":
-            print("消息推送成功！")
-        else:
-            print("发送可能失败 返回值：%s" % (msg_back["errmsg"]))
-    except Exception:
-        print("消息发送错误")
+def loop(_start_n, _end_n):
+    global i
+    for i in range(_start_n, _end_n):
+        name_i = prefix + str(i) + suffix
+        check(name_i)
+        sleep()
+
+
+def loop_zfill(_start_n, _end_n):
+    global i
+    for i in range(_start_n, _end_n):
+        name_i = prefix + str(i).zfill(zfill_n) + suffix
+        check(name_i)
+        sleep()
 
 
 def check(_nickname):
@@ -174,20 +172,22 @@ def sleep():
         time.sleep(0.02)
 
 
-def loop(_start_n, _end_n):
-    global i
-    for i in range(_start_n, _end_n):
-        name_i = prefix + str(i) + suffix
-        check(name_i)
-        sleep()
-
-
-def loop_zfill(_start_n, _end_n):
-    global i
-    for i in range(_start_n, _end_n):
-        name_i = prefix + str(i).zfill(zfill_n) + suffix
-        check(name_i)
-        sleep()
+def send_wxmsg(_sckey, _title="misaka", _context="正文"):
+    url_postmsg = "https://sc.ftqq.com/%s.send" % _sckey
+    _context = _context + "\n\n" + time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    data = {
+        "text": "%s" % _title,
+        "desp": "%s" % _context
+    }
+    try:
+        res = requests.post(url=url_postmsg, data=data)
+        msg_back = json.loads(res.text)
+        if msg_back["errmsg"] == "success":
+            print("消息推送成功！")
+        else:
+            print("发送可能失败 返回值：%s" % (msg_back["errmsg"]))
+    except Exception:
+        print("消息发送错误")
 
 
 if __name__ == "__main__":
