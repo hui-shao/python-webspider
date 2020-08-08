@@ -239,7 +239,7 @@ class Spider:
             else:
                 err_status = 0
                 start = time.time()
-                pic_file = open(self.dirpath_sub + str(_count) + ".jpg", "wb")
+                pic_file = open(self.dirpath_sub + str(_count).zfill(3) + ".jpg", "wb")
                 pic_file.write(pic.content)
                 pic_file.close()
                 end = time.time()
