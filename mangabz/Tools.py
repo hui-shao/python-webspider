@@ -1,7 +1,37 @@
 # -*- coding: UTF-8 -*-
-import requests
+# @Time    : 2020/8/8 17:05
+# @Author  : Hui-Shao
+
 import json
+import os
+import platform
 import time
+
+import requests
+
+
+class ConsoleTools(object):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def check_platform():
+        check_result = platform.system()
+        if "indows" in check_result:
+            return "W"
+        elif "inux" in check_result:
+            return "L"
+
+    def console_clear(self):
+        sysinfo = self.check_platform()
+        if sysinfo == "W":
+            os.system("cls")
+            return
+        elif sysinfo == "L":
+            os.system("clear")
+            return
+        os.system("cls")
+
 
 class MsgTools:
     def __init__(self):

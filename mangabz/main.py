@@ -1,11 +1,11 @@
 # -*- coding: UTF-8 -*-
-import requests
-import time
-import re
 import os
+import re
 import sys
-from console_tools import ConsoleTools
-from msg_tools import MsgTools
+import time
+
+import Tools
+import requests
 
 # Some vars
 SaveImgUrl = True
@@ -14,6 +14,7 @@ URL = "http://www.mangabz.com/m"
 START_N = 21715
 END_N = 21720
 SCKEY = ""  # 用于server酱消息推送，若不需要请保持现状
+Aria = False
 
 
 class Spider:
@@ -278,8 +279,8 @@ class Spider:
 
 if __name__ == '__main__':
     try:
-        tool = ConsoleTools()
-        msgtool = MsgTools()
+        tool = Tools.ConsoleTools()
+        msgtool = Tools.MsgTools()
         spider = Spider()
         spider.run()
     except KeyboardInterrupt:
