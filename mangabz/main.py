@@ -14,7 +14,7 @@ URL = "http://www.mangabz.com/m"
 START_N = 21715
 END_N = 21720
 SCKEY = ""  # 用于server酱消息推送，若不需要请保持现状
-Aria = False
+Aria = False  # 是否使用aria下载
 
 
 class Spider:
@@ -60,20 +60,23 @@ class Spider:
                 self.save_imgurl(imgurl_list)
             # 以下 遍历“图片下载地址”列表，开始下载
             print("下载开始...")
-            count = 1
-            for imgurl in imgurl_list:
-                if "error" in imgurl:
+            if Aria:  # 判断是否使用aria下载
+                os.system(f"aria2c -i {self.dirpath_sub}url.txt -d {self.dirpath_sub}")
+            else:
+                count = 1
+                for imgurl in imgurl_list:
+                    if "error" in imgurl:
+                        count += 1
+                        continue
+                    else:
+                        self.download(imgurl, count)
+                    if count % 10 == 0:
+                        print("暂停一下...")
+                        # time.sleep(3)  # debug only
+                        time.sleep(10)
                     count += 1
-                    continue
-                else:
-                    self.download(imgurl, count)
-                if count % 10 == 0:
-                    print("暂停一下...")
-                    # time.sleep(3)  # debug only
-                    time.sleep(10)
-                count += 1
-            imgurl_list = []  # 下载完一话以后清空一下列表
-            self.write_err_total()  # 每完成一话，将所有错误信息写入到 $DirPath 下的 Errors_total.txt 文件
+                imgurl_list = []  # 下载完一话以后清空一下列表
+                self.write_err_total()  # 每完成一话，将所有错误信息写入到 $DirPath 下的 Errors_total.txt 文件
             print("\n%s Finished.\nContinue after 5s..." % self.title)
             time.sleep(5)
             tool.console_clear()  # 清屏
