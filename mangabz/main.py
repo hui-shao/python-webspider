@@ -65,11 +65,7 @@ class Spider:
             else:
                 count = 1
                 for imgurl in imgurl_list:
-                    if "error" in imgurl:
-                        count += 1
-                        continue
-                    else:
-                        self.download(imgurl, count)
+                    self.download(imgurl, count)
                     if count % 10 == 0:
                         print("暂停一下...")
                         # time.sleep(3)  # debug only
@@ -217,6 +213,8 @@ class Spider:
             os.mkdir(self.dirpath_sub)
 
     def download(self, _url, _count):
+        if "error" in _url:
+            return None
         hea = self.hea
         hea["Referer"] = self.url_a
         err_status = 0
