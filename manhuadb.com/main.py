@@ -6,13 +6,14 @@ import os
 import re
 import time
 import base64
+import traceback
 
 import Tools
 import requests
 
 # Some vars
 DirPath = "./Downloads/"  # 文件存储目录 注意以 / 结尾
-URL = "https://www.manhuadb.com/manhua/2499/"
+URL = "https://www.manhuadb.com/manhua/10817"
 SCKEY = ""  # 用于server酱消息推送，若不需要请保持现状
 SaveImgUrl = True  # 是否保存相应章节的图片下载地址
 Aria = False  # 是否使用aria下载
@@ -24,6 +25,7 @@ class Spider:
             "Accept-Encoding": "gzip, deflate",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.163 Safari/537.36"
         }
+        self.book_name = ""  # 整本书的名字
         self.chapter_info_arr = []  # 每个元素为tuple, 链接+标题
         self.chapter_url = ""  # 初始化 每个章节页面自身的url
         self.chapter_title = ""  # 初始化 每个章节页面自身的标题
@@ -45,7 +47,7 @@ class Spider:
             print("正在获取每一话内所有图片的下载地址...")
             self.chapter_url, self.chapter_title = "https://www.manhuadb.com" + a[0], a[1]
             print(f"当前进度: {self.chapter_title}  {self.chapter_url}")
-            self.dirpath_sub = DirPath + self.chapter_title + "/"
+            self.dirpath_sub = DirPath + self.book_name + "/" + self.chapter_title + "/"
             self.mkdir()  # 建立文件夹
             if "error" in self.get_chapter_imgurls():  # 检查返回值，如果获取必要信息环节出错,跳过此次循环
                 print("获取信息失败，跳过此次循环")
@@ -83,7 +85,8 @@ class Spider:
         用于获取每一话的页面地址
         :param _url: 目标网页url
         :return: 若无异常返回True,否则false
-        :var: self.chapter_info_arr
+        :var: self.chapter_info_arr 存储章节信息的数组
+        :var: self.book_name 整本书的名字
         """
         hea = self.hea
         err_status = 0
@@ -109,6 +112,7 @@ class Spider:
                 time.sleep(15)
             else:
                 err_status = 0
+                self.book_name = re.findall(r'<h1 class="comic-title">(.*?)</h1>', res.text)[0]
                 self.chapter_info_arr = re.findall(r'<a class="fixed-a-es" href="(.*?)" title="(.*?)">', res.text)
                 break
         if err_status == 1:
@@ -126,7 +130,6 @@ class Spider:
         :return: 若出现异常，返回error文本
         :var: self.chapter_img_urls
         """
-        result = "error"
         hea = self.hea
         res = ""
         err_status = 0
@@ -153,6 +156,11 @@ class Spider:
             else:
                 try:
                     result = re.findall(r"<script>var img_data = '(.*?)';</script>", res.text)[0]
+                    img_urls_info = eval(base64.b64decode(result))
+                    img_host_and_pre = re.findall(r'data-host="(.*?)".*?data-img_pre="(.*?)">', res.text)
+                    for dict_n in img_urls_info:
+                        self.chapter_img_urls.append(
+                            img_host_and_pre[0][0] + img_host_and_pre[0][1] + dict_n["img"])  # 生成url数组
                 except IndexError:
                     err_status = 2
                 else:
@@ -165,12 +173,6 @@ class Spider:
             self.err_list_total.append("正则匹配错误|请求图片地址|链接|%s" % res.url)
             return "Re.findall_error"
         else:
-            img_urls_info = eval(base64.b64decode(result))
-            prefix = self.chapter_url.replace(URL.strip("/"), "https://i2.manhuadb.com/ccbaike").replace(".html",
-                                                                                                         "/").replace(
-                "_", "/")
-            for dict_n in img_urls_info:
-                self.chapter_img_urls.append(prefix + dict_n["img"])
             return "success"
 
     def mkdir(self):
@@ -180,9 +182,9 @@ class Spider:
         :return:
         """
         if not os.path.exists(DirPath):
-            os.mkdir(DirPath)
+            os.makedirs(DirPath)
         if not os.path.exists(self.dirpath_sub):
-            os.mkdir(self.dirpath_sub)
+            os.makedirs(self.dirpath_sub)
 
     def download(self, _url, _count):
         if "error" in _url:
@@ -257,5 +259,5 @@ if __name__ == '__main__':
         spider.run()
     except KeyboardInterrupt:
         print("\n\nRaised KeyboardInterruption.\nExit!")
-    except Exception as error_info:
-        print("\n\nERROR!\n", error_info)
+    except Exception:
+        traceback.print_exc()
