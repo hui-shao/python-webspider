@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-# @Time    : 2020/10/4 17:37
+# @Time    : 2020/10/5 10:59
 # @Author  : Hui-Shao
 
 import os
@@ -72,6 +72,7 @@ class Spider:
             print("\n%s Finished.\nContinue after 5s..." % self.chapter_title)
             time.sleep(5)
             tool.console_clear()  # 清屏
+            self.chapter_img_urls = []  # 每下载完成一话，清空链接列表
         # 以下 下载完成之后..
         total_time = time.time() - time_start
         print("\n\n====================\n")
