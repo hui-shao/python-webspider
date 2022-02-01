@@ -7,7 +7,7 @@ import time
 def Getsource_rootpage():
     rootpage_url = input('请输入网址(含http)：')
     rootpage_subpage_html = requests.get(rootpage_url, headers=hea, timeout=(72, 120))
-    rootpage_subpage_html.encoding = 'gbk'
+    rootpage_subpage_html.encoding = 'utf-8'
     # print("即将显示网页源码\n")
     # time.sleep(2)
     # print(rootpage_subpage_html.text)
@@ -16,9 +16,9 @@ def Getsource_rootpage():
     data0.close()
     time.sleep(2)
     os.system('clear')  # for linux
-    text = re.findall("data-src='(.*?)'", rootpage_subpage_html.text)
-    # get_title = re.findall('<title>(.*?)</title>',rootpage_subpage_html.text)
-    get_title = re.findall(r'<title>(.*?\d{1,3}P\]) ', rootpage_subpage_html.text)
+    text = re.findall("ess-data='(.*?)'", rootpage_subpage_html.text)
+    get_title = re.findall('<title>(.*?) .*?</title>',rootpage_subpage_html.text)
+    #get_title = re.findall(r'<title>(.*?\d{1,3}P.*?\]) ', rootpage_subpage_html.text)
     #
     print("即将显示提取到的内容\n")
     print("共"+str(len(text))+"个")
@@ -96,7 +96,8 @@ hea = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.3
 title_list = Getsource_rootpage()
 title = ",".join(title_list)
 # title = title.encode('utf-8')
-
+if len(title) <5:
+    title = input("输入标题: ")
 print("\n标题：")
 print(title)
 i = 1
@@ -114,6 +115,7 @@ while True:
         for imgurl in lines:
             imgurl = imgurl.strip()
             DownloadIMG(imgurl)
+            time.sleep(1.5)
             i = i+1
         break
     if str_in1 in ('n'):
