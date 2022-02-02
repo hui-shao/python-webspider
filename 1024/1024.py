@@ -175,11 +175,11 @@ class Spider:
             suffix = re.sub(r'[\\/:*?"<>|]', '_', suffix)
             response = _requests("get", url)
             print(i, response)
-            if response.status_code == 200:
+            if (not response) or response.status_code != 200:
+                self.dl_urls_err.append(url)
+            else:
                 with open(f"./{self.title}/{str(i).zfill(3)}.{suffix}", "wb") as f:
                     f.write(response.content)
-            else:
-                self.dl_urls_err.append(url)
             i += 1
             time.sleep(1.2)
         print("\n=================END=================\n")
