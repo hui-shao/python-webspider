@@ -7,10 +7,11 @@ import time
 import traceback
 
 import requests
+import chardet
 
 # config
 _use_quiet_mode = False
-_use_utf8_res_encoding = True
+_cust_encoding_type = ""
 _use_aria2 = False
 
 
@@ -21,13 +22,15 @@ def options():
         -f [--filename] <filename>     将从该文件批量读入目标地址
         -q [--quiet]                   静默运行模式
 
-        --disable-utf8                 禁用 "对获取的网页进行 utf-8 编码" (默认开启)
+        --encoding                     可选 utf-8 或 gbk (默认自动判断)
+                                       示例: --encoding=gbk
+                                       
         --enable-aria2                 启用 "调用 aria2 进行下载 " (默认关闭)
     '''
 
     print("")
-    global url_list, filename, _use_utf8_res_encoding, _use_aria2, _use_quiet_mode
-    opts, args = getopt.getopt(sys.argv[1:], '-h-f:-q', ['help', 'filename=', 'quiet', 'disable-utf8', 'enable-aria2'])
+    global url_list, filename, _cust_encoding_type, _use_aria2, _use_quiet_mode
+    opts, args = getopt.getopt(sys.argv[1:], '-h-f:-q', ['help', 'filename=', 'quiet', 'encoding', 'enable-aria2'])
     if len(opts) < 1:  # 若未接收到已经预设的命令行参数，则直接采用默认参数
         print("[*] 未检测到传入参数，采用默认配置\n")
         url_list.append(input("请输入网址(含http): "))
@@ -44,9 +47,12 @@ def options():
             _use_quiet_mode = True
             print("[+] 启用无交互静默模式")
             continue
-        if opt_name == '--disable-utf8':
-            _use_utf8_res_encoding = False
-            print("[+] 禁用 '对获取的网页进行 utf-8 编码'")
+        if opt_name == '--encoding':
+            if opt_value.lower() in ("gbk", "utf-8"):
+                _cust_encoding_type = opt_value
+                print(f"[+] 将使用 {opt_value} 对获取的网页进行编码")
+            else:
+                print("[+] 自定义 encoding 设置有误, 将自动判断")
             continue
         if opt_name == '--enable-aria2':
             _use_aria2 = True
@@ -141,13 +147,22 @@ class Spider:
             self.clean_vars()
             self.clean_files()
 
+    @staticmethod
+    def identify_encoding(_bin: bytes) -> str:
+        det_res = chardet.detect(_bin)
+        if det_res['confidence'] > 0.65:
+            encoding_type = det_res['encoding']
+        else:
+            encoding_type = "utf-8"
+        return encoding_type
+
     def get_info(self, _url: str) -> bool:
         if _url.__len__() < 5:
             return False
         res = _requests("get", _url)
         if not res:
             return False
-        res.encoding = "utf-8" if _use_utf8_res_encoding else "gbk"
+        res.encoding = _cust_encoding_type if _cust_encoding_type else self.identify_encoding(res.content)
         title_arr = re.findall('<title>(.*?) .*?</title>', res.text)
         dl_urls = re.findall("ess-data='(.*?)'", res.text)
         self.title = title_arr[0] if title_arr else "null"
