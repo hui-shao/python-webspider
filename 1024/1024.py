@@ -126,11 +126,13 @@ class Spider:
     def __init__(self):
         self.title = ""
         self.res_text = ""
+        self.page_url = ""
         self.dl_urls = []
         self.dl_urls_err = []
 
     def run(self, _url_list: list):
         for url in _url_list:
+            self.page_url = url
             if not self.get_info(url):
                 continue
             self.text_handle()
@@ -217,12 +219,16 @@ class Spider:
     def save_dl_urls_err(self):
         if self.dl_urls_err:
             with open("./dl_urls_err.txt", "a", encoding="utf-8") as f:
+                f.write(f"\nParent_url:\n{self.page_url}")
+                f.write("Sub_url:\n")
+                for url_err in self.dl_urls_err:
+                    f.write(f"{url_err}\n")
                 f.write("\n")
-                f.writelines(self.dl_urls_err)
 
     def clean_vars(self):
         self.title = ""
         self.res_text = ""
+        self.page_url = ""
         self.dl_urls_err.clear()
         self.dl_urls.clear()
 
