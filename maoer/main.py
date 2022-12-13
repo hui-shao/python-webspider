@@ -37,13 +37,14 @@ class Spider:
             sound_intro = self.clean_html(sound_intro)
             sound_url = item.get("soundurl")
             cover_url = item.get("front_cover")
-            self.download(sound_name, sound_intro, sound_url, cover_url)
+            create_time = time.strftime("%Y%m%d_%H%M%S", time.localtime(int(item.get("create_time"))))
+            self.download(sound_name, sound_intro, sound_url, cover_url, create_time)
             i += 1
             sleep_time = random.randint(5, 30)
             print(f"\n\nWait {sleep_time}s\n\n")
             time.sleep(sleep_time)
         self.err_url_output()
-        input("Press ENTER to Exit..")
+        input("\nPress ENTER to Exit..")
 
     @staticmethod
     def clean_file_name(filename: str):  # 文件名合法化 用作路径
@@ -65,12 +66,14 @@ class Spider:
         cleaned = re.sub(r"\s+", " ", cleaned)
         return cleaned.strip()
 
-    def download(self, _name: str, _intro: str, _s_url: str, _c_url: str) -> None:
+    def download(self, _name: str, _intro: str, _s_url: str, _c_url: str, _c_time: str) -> None:
+        _name = _c_time[:9] + _name
         print(f"Current:\n{_name}\n{_intro}\n{_s_url}\n{_c_url}\n")
         if not os.path.exists(f"{self.save_path}/{_name}"):
             os.mkdir(f"{self.save_path}/{_name}")
 
-        open(f"{self.save_path}/{_name}/intro.txt", "w", encoding="utf-8").write(_name + "\n\n" + _intro)
+        open(f"{self.save_path}/{_name}/intro.txt", "w", encoding="utf-8").write(
+            _name[9:] + "\n\n" + _intro + "\n\n" + _c_time)
 
         res1 = self._requests("get", _s_url)
         suffix1 = os.path.splitext(_s_url)[1]
